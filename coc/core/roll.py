@@ -22,10 +22,14 @@ import re
 
 def random_func(limit: int) -> int:
     """
-    Generate a random number between 1 and limit
+    Generate a random integer between 1 and limit.
+    This function is the heart of the die rolls.
+    If you don't trust its randomness, then feel free to repalce it.
     :param limit: upper bound
     :return: random number between 1 and limit
     """
+    if not isinstance(limit, int) or limit < 2:
+        raise TypeError(f"parameter limit must be integer greater than 1:  {limit}")
     return random.randint(1, limit)
 
 
@@ -36,7 +40,7 @@ class Die:
 
     def __init__(self, sides: int):
         if not isinstance(sides, int) or sides < 1:
-            raise ValueError(f"Sides {sides} must be strict positive integer")
+            raise TypeError(f"Sides {sides} must be strict positive integer")
         self.sides = sides
         self._value = None
 
@@ -70,7 +74,6 @@ class Roll:
                 l = 1 if len(term[0]) == 0 else int(term[0])
                 for i in range(l):
                     self.dice.append(Die(int(term[1])))
-        pass
 
     def roll(self) -> int:
         """
@@ -82,6 +85,15 @@ class Roll:
             r = die.value()
             total += die.value()
         return total
+
+
+D3 = Roll("D3")
+D4 = Roll("D4")
+D5 = Roll("D5")
+D6 = Roll("D6")
+D8 = Roll("D8")
+D10 = Roll("D10")
+D100= Roll("D100")
 
 
 class Value:

@@ -15,20 +15,11 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from enum import Enum, unique
+import logging
 from typing import Optional
 
-from coc.core import roll
-
-
-@unique
-class Era(Enum):
-    """
-    COC ERA
-    """
-    NineteenTwenty = 1
-    Modern = 2
-    Pulp = 3
+from coc.core.gender import Gender
+from coc.core.roll import Roll, random_func, D6, D100, D10
 
 
 class Attribute:
@@ -36,9 +27,10 @@ class Attribute:
     Value
     """
 
-    def __init__(self, description: str, code: str, regular: int = None):
+    def __init__(self, description: str, code: str, regular: int = None, maximum: int = 100):
         self.description = description
         self.code = code
+        self.maximum = maximum
         self._regular = regular
         self._half = regular // 2
         self._fifth = regular // 5
@@ -55,10 +47,18 @@ class Attribute:
         return self._regular
 
     @regular.setter
-    def regular(self, regular: int):
-        self._regular = regular
-        self._half = regular // 2
-        self._fifth = regular // 5
+    def regular(self, new_value: int) -> None:
+        """
+        Setter for regular
+        :param new_value: new value (limited to the maximum)
+        """
+        logging.debug(f"Trying to set {self} to {new_value}")
+        if new_value > self.maximum:
+            logging.debug(f"{new_value} exceeds maximum of {self.maximum}, so limiting it so maximum")
+            new_value = self.maximum
+        self._regular = new_value
+        self._half = new_value // 2
+        self._fifth = new_value // 5
 
     @staticmethod
     def _compare(value: int, limit: Optional[int]) -> bool:
@@ -69,7 +69,7 @@ class Attribute:
         :return: True if value is less than or equal to limit.
         """
         if value is None:
-            value = roll.random_func(100)
+            value = random_func(100)
         return value <= limit
 
     def is_regular(self, value: Optional[int]) -> bool:
@@ -96,6 +96,25 @@ class Attribute:
         """
         return self._compare(value, self._fifth)
 
+    def deduct(self, value: int):
+        """
+
+        :param value:
+        :return:
+        """
+        logging.info(f"Deducting {value} from {self}")
+        self.regular -= value
+
+    def set_if_higher(self, value):
+        if value > self.regular:
+            self.regular = value
+
+    def improvement_roll(self):
+        v = D100.roll()
+        if v > self.regular:
+            v = D10.roll()
+            self.regular += v
+
 
 STR = "STR"
 CON = "CON"
@@ -105,49 +124,7 @@ APP = "APP"
 INT = "INT"
 POW = "POW"
 EDU = "EDU"
-
-
-@unique
-class Gender(Enum):
-    """
-    Sex
-    """
-    MALE = 1
-    FEMALE = 2
-    X = 3
-
-    def person(self):
-        if self == Gender.FEMALE:
-            return "woman"
-        elif self == Gender.MALE:
-            return "man"
-        return "X"
-
-    def personal(self):
-        if self == Gender.FEMALE:
-            return "she"
-        elif self == Gender.MALE:
-            return "he"
-        return "X"
-
-
-POSSESSIVE_PRONOUN = {
-    Gender.MALE: "his",
-    Gender.FEMALE: "her",
-    Gender.X: "theirs"
-}
-
-OBJECT_PRONOUN = {
-    Gender.MALE: "him",
-    Gender.FEMALE: "her",
-    Gender.X: "them"
-}
-
-PERSONAL_PRONOUN = {
-    Gender.MALE: "he",
-    Gender.FEMALE: "she",
-    Gender.X: "they"
-}
+LUCK = "LUCK"
 
 
 class Characteristic(Attribute):
@@ -155,8 +132,18 @@ class Characteristic(Attribute):
     Investigator characteristic
     """
 
-    def __init__(self, code, description, regular):
-        Attribute.__init__(self, code, description, regular)
+    def __init__(self, code, description, regular, maximum):
+        Attribute.__init__(self, code, description, regular, maximum)
+
+    def improvement_roll(self):
+        """
+        Perform an improvement roll
+        To make an EDU improvement check, simply roll percentage dice.
+        If the result is greater than your present EDU add 1D10 percentage points to your EDU characteristic (note
+        that EDU cannot go above 99).
+        :return:
+        """
+        pass
 
 
 class Investigator:
@@ -169,31 +156,159 @@ class Investigator:
         self.surname = surname
         self.gender = gender
         self.age = age
-        self.possessive_p = POSSESSIVE_PRONOUN[gender]
-        self.object_p = OBJECT_PRONOUN[gender]
-        self.personal_p = PERSONAL_PRONOUN[gender]
         self.occupation = occupation
         self.birthplace = birthplace
         self.residence = residence
-        self.strength = None
-        self.constitution = None
-        self.dexterity = None
-        self.intelligence = None
-        self.size = None
-        self.power = None
-        self.appearance = None
-        self.education = None
+        self.chars = {STR: Characteristic(STR, "Strength", 5 * Roll("3D6").roll(), maximum=99),
+                      CON: Characteristic(CON, "Constitution", 5 * Roll("3D6").roll(), maximum=99),
+                      SIZ: Characteristic(SIZ, "Size", 5 * Roll("2D6+6").roll(), maximum=200),
+                      DEX: Characteristic(DEX, "Dexterity", 5 * Roll("3D6").roll(), maximum=99),
+                      APP: Characteristic(APP, "Appearance", 5 * Roll("3D6").roll(), maximum=99),
+                      INT: Characteristic(INT, "Intelligence", 5 * Roll("2D6+6").roll(), maximum=99),
+                      POW: Characteristic(SIZ, "Power", 5 * Roll("3D6").roll(), maximum=200),
+                      EDU: Characteristic(EDU, "Education", 5 * Roll("2D6+6").roll(), maximum=99),
+                      LUCK: Characteristic(LUCK, "Luck", 5 * Roll("3D6").roll(), maximum=9999)}
+        # self.possessive_p = gender.POSSESSIVE_PRONOUN[gender]
+        # self.object_p = gender.OBJECT_PRONOUN[gender]
+        # self.personal_p = PERSONAL_PRONOUN[gender]
 
     def __repr__(self):
         ret = f"{self.firstname} {self.surname} is a {self.age} year old {self.gender.person()} born in {self.birthplace} and living in {self.residence}. At the moment {self.gender.personal()} is a {self.occupation}"
         return ret
 
-    @staticmethod
-    def value_or_roll(description, key, **kwargs):
-        ret = kwargs.get(key)
-        if ret is None:
-            ret = Roll(description).roll()
-        return ret
+    def _get_char_value(self, code: str) -> int:
+        return self.chars[code].regular
+
+    def _set_char_value(self, code: str, new_value: int):
+        self.chars[code].regular = new_value
+
+    @property
+    def strength(self):
+        """
+        STR getter
+        :return: STR
+        """
+        return self._get_char_value(STR)
+
+    @strength.setter
+    def strength(self, new_value: int):
+        """
+        STR setter
+        :param new_value: new STR value
+        """
+        self._set_char_value(STR, new_value)
+
+    @property
+    def constitution(self):
+        """
+        CON getter
+        :return: CON
+        """
+        return self._get_char_value(CON)
+
+    @constitution.setter
+    def constitution(self, new_value: int):
+        """
+        CON setter
+        :param new_value: new CON value
+        """
+        self._set_char_value(CON, new_value)
+
+    @property
+    def size(self):
+        """
+        SIZ getter
+        :return: SIZ
+        """
+        return self._get_char_value(SIZ)
+
+    @size.setter
+    def size(self, new_value: int):
+        """
+        SIZ setter
+        :param new_value: new SIZ value
+        """
+        self._set_char_value(SIZ, new_value)
+
+    @property
+    def dexterity(self):
+        """
+        DEX getter
+        :return: DEX
+        """
+        return self._get_char_value(DEX)
+
+    @dexterity.setter
+    def dexterity(self, new_value: int):
+        """
+        DEX setter
+        :param new_value: new DEX value
+        """
+        self._set_char_value(DEX, new_value)
+
+    @property
+    def appearance(self):
+        """
+        APP getter
+        :return: APP
+        """
+        return self._get_char_value(APP)
+
+    @appearance.setter
+    def appearance(self, new_value: int):
+        """
+        APP setter
+        :param new_value: new APP value
+        """
+        self._set_char_value(APP, new_value)
+
+    @property
+    def intelligence(self):
+        """
+        INT getter
+        :return: INT
+        """
+        return self._get_char_value(INT)
+
+    @intelligence.setter
+    def intelligence(self, new_value: int):
+        """
+        APP setter
+        :param new_value: new INT value
+        """
+        self._set_char_value(INT, new_value)
+
+    @property
+    def power(self):
+        """
+        POW getter
+        :return: POW
+        """
+        return self._get_char_value(POW)
+
+    @power.setter
+    def power(self, new_value: int):
+        """
+        POW setter
+        :param new_value: new POW value
+        """
+        self._set_char_value(POW, new_value)
+
+    @property
+    def education(self):
+        """
+        EDU getter
+        :return: EDU
+        """
+        return self._get_char_value(EDU)
+
+    @education.setter
+    def education(self, new_value: int):
+        """
+        EDU setter
+        :param new_value: new EDU value
+        """
+        self._set_char_value(EDU, new_value)
 
     def generate_name(self, gender: Gender = None) -> (str, str, Gender):
         """
@@ -203,17 +318,52 @@ class Investigator:
         """
         raise NotImplementedError()
 
-    def set_characteristic(self, **kwargs):
+    def education_improvement(self) -> None:
         """
+        """
+        pass
 
-        :param kwargs:
+    def age_impact(self):
         """
-        self.strength = 5 * self.value_or_roll("3D6", STR, **kwargs)
-        self.constitution = 5 * self.value_or_roll("3D6", CON, **kwargs)
-        self.dexterity = 5 * self.value_or_roll("3D6", DEX, **kwargs)
-        self.appearance = 5 * self.value_or_roll("3D6", APP, **kwargs)
-        self.intelligence = 5 * self.value_or_roll("2D6+6", INT, **kwargs)
-        self.size = 5 * self.value_or_roll("2D6+6", SIZ, **kwargs)
+        AGE modifiers:
+        A player can choose any age between 15 and 90 for their
+        investigator. If you wish to create an investigator outside
+        this age range, it is up to the Keeper to adjudicate. Use the
+        appropriate modifier for your chosen age only (they are not
+        cumulative).
+        """
+        if self.age < 20:
+            logging.info("Age is below 20.")
+            logging.info("Deduct 5 points among STR and SIZ.")
+            r = D6.roll()
+            str_mod = r - 1
+            siz_mod = 5 - str_mod
+            logging.debug(f"Rolled {str_mod} => {str_mod} is deducted from STR. {siz_mod} from SIZ.")
+            self.strength -= str_mod
+            self.size -= siz_mod
+            logging.info("Deduct 5 points from EDU.")
+            self.education -= 5
+            logging.info("Roll twice to generate a Luck score and use the higher value")
+
+        elif self.age < 40:
+            pass
+        elif self.age < 50:
+            pass
+        elif self.age < 60:
+            pass
+        elif self.age < 70:
+            pass
+        elif self.age < 80:
+            pass
+        else:
+            """
+            Make 4 improvement checks for EDU and deduct 80 points
+            among STR, CON or DEX, and reduce APP by 25
+            """
+            pass
+
+    def set_characteristic(self):
+        self.age_impact()
 
 
 me = Investigator(firstname="Jessy",
@@ -222,7 +372,7 @@ me = Investigator(firstname="Jessy",
                   birthplace="Boston",
                   residence="Arkham",
                   occupation=None,
-                  age=20)
+                  age=17)
 
 me.set_characteristic()
 print(me.gender.person())
