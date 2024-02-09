@@ -15,6 +15,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
+import logging
 import math
 import random
 import re
@@ -83,8 +84,24 @@ class Roll:
         total = 0
         for die in self.dice:
             r = die.value()
-            total += die.value()
+            total += r
+            logging.debug(f"Rolling {die} => value {r}  (subtotal: {total})")
         return total
+
+    @staticmethod
+    def spread(value: int, size:int) -> list:
+        """
+        Spread a value among and number of variables.
+        Spread(10,3) will generate a random list of numbers of length 3, where the sum of all numbers is 10, e.g. [1,7,2]
+        :param value: The value to spread
+        :param size: the number of values to spread the value among.
+        :return: list of variables
+        """
+        ret = [0] * size
+        for _ in range(value):
+            index = random.randint(0, size - 1)
+            ret[index] += 1
+        return ret
 
 
 D3 = Roll("D3")
@@ -114,7 +131,6 @@ class Value:
 
 def test_random():
     COUNT = 10000000
-
     SEQUENCE_MAX = min(max(2, int(math.log10(COUNT)-2)),6)
     seq = ""
     die = Roll('D6')
@@ -151,4 +167,4 @@ def test_random():
 
 
 if __name__ == "__main__":
-    test_random()
+    print(Roll.spread(15,4))

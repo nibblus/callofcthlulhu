@@ -109,11 +109,14 @@ class Attribute:
         if value > self.regular:
             self.regular = value
 
-    def improvement_roll(self):
-        v = D100.roll()
-        if v > self.regular:
-            v = D10.roll()
-            self.regular += v
+    def improvement_roll(self, count: int=1):
+        for _ in range(count):
+            v = D100.roll()
+            if v > self.regular:
+                v = D10.roll()
+                self.regular += v
+
+
 
 
 STR = "STR"
@@ -323,6 +326,11 @@ class Investigator:
         """
         pass
 
+    def deduct(self, amount:int, *args):
+        spread = Roll.spread(amount, len(args))
+        for i in range(len(spread)):
+            self.chars[args[i]].deduct(spread[i])
+
     def age_impact(self):
         """
         AGE modifiers:
@@ -335,32 +343,54 @@ class Investigator:
         if self.age < 20:
             logging.info("Age is below 20.")
             logging.info("Deduct 5 points among STR and SIZ.")
-            r = D6.roll()
-            str_mod = r - 1
-            siz_mod = 5 - str_mod
-            logging.debug(f"Rolled {str_mod} => {str_mod} is deducted from STR. {siz_mod} from SIZ.")
-            self.strength -= str_mod
-            self.size -= siz_mod
+            self.deduct(5, STR, SIZ)
             logging.info("Deduct 5 points from EDU.")
             self.education -= 5
             logging.info("Roll twice to generate a Luck score and use the higher value")
-
+            self.chars[LUCK].set_if_higher(5 * Roll("3D6").roll())
         elif self.age < 40:
-            pass
+            self.chars[EDU].improvement_roll()
         elif self.age < 50:
-            pass
+            self.chars[EDU].improvement_roll(2)
+            self.deduct(5, STR, CON, DEX)
+            self.appearance -= 5
         elif self.age < 60:
-            pass
+            """
+            50s: Make 3 improvement checks for EDU 
+            and deduct 10 points among STR, CON or DEX, 
+            and reduce APP by 10.
+            """
+            self.chars[EDU].improvement_roll(3)
+            self.deduct(10, STR, CON, DEX)
+            self.appearance -= 10
         elif self.age < 70:
-            pass
+            """
+            60s: Make 4 improvement checks for EDU
+            and deduct 20 points among STR, CON or DEX, 
+            and reduce APP by 15.
+            """
+            self.chars[EDU].improvement_roll(4)
+            self.deduct(20, STR, CON, DEX)
+            self.appearance -= 15
         elif self.age < 80:
-            pass
+            """
+            70s: Make 4 improvement checks for EDU 
+            and deduct 40 points among STR, CON or DEX, 
+            and reduce APP by 20.
+            """
+            self.chars[EDU].improvement_roll(4)
+            self.deduct(40, STR, CON, DEX)
+            self.appearance -= 20
         else:
             """
-            Make 4 improvement checks for EDU and deduct 80 points
-            among STR, CON or DEX, and reduce APP by 25
+            80s: Make 4 improvement checks for EDU 
+            and deduct 80 points among STR, CON or DEX, 
+            and reduce APP by 25.
             """
-            pass
+            self.chars[EDU].improvement_roll(4)
+            self.deduct(80, STR, CON, DEX)
+            self.appearance -= 25
+
 
     def set_characteristic(self):
         self.age_impact()
