@@ -15,25 +15,27 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import logging
 from typing import Optional
 
 from coc.core.gender import Gender
 from coc.core.roll import Roll, random_func, D6, D100, D10
+from coc.lib.logger import LOGGER
 
 
 class Attribute:
     """
-    Value
+    Keep track of value, half and fifth
     """
 
     def __init__(self, description: str, code: str, regular: int = None, maximum: int = 100):
+        LOGGER.debug(f"creating Attribute wir description:{description} code:{code} regular:{regular} maximum:{maximum}")
         self.description = description
         self.code = code
         self.maximum = maximum
         self._regular = regular
         self._half = regular // 2
         self._fifth = regular // 5
+        LOGGER.info(f"Created {self.__repr__()}")
 
     def __repr__(self):
         return f'{self.description}{"" if self.code is None else f"/{self.code}"}({"Not yet set" if self.regular is None else f"R: {self._regular} H:{self._half} F: {self._fifth}"})'
@@ -52,9 +54,9 @@ class Attribute:
         Setter for regular
         :param new_value: new value (limited to the maximum)
         """
-        logging.debug(f"Trying to set {self} to {new_value}")
+        LOGGER.debug(f"Trying to set {self} to {new_value}")
         if new_value > self.maximum:
-            logging.debug(f"{new_value} exceeds maximum of {self.maximum}, so limiting it so maximum")
+            LOGGER.debug(f"{new_value} exceeds maximum of {self.maximum}, so limiting it so maximum")
             new_value = self.maximum
         self._regular = new_value
         self._half = new_value // 2
@@ -102,7 +104,7 @@ class Attribute:
         :param value:
         :return:
         """
-        logging.info(f"Deducting {value} from {self}")
+        LOGGER.info(f"Deducting {value} from {self}")
         self.regular -= value
 
     def set_if_higher(self, value):
@@ -171,6 +173,16 @@ class Investigator:
                       POW: Characteristic(SIZ, "Power", 5 * Roll("3D6").roll(), maximum=200),
                       EDU: Characteristic(EDU, "Education", 5 * Roll("2D6+6").roll(), maximum=99),
                       LUCK: Characteristic(LUCK, "Luck", 5 * Roll("3D6").roll(), maximum=9999)}
+        self.age_impact()
+        self.damage_bonus = ""
+        self.build = None
+        self.set_damage_bonus_and_build()
+        self.hit_max = (self.constitution + self.size) // 10
+        self.movement = None
+        self.set_movement()
+        self.occupation_impact()
+
+
         # self.possessive_p = gender.POSSESSIVE_PRONOUN[gender]
         # self.object_p = gender.OBJECT_PRONOUN[gender]
         # self.personal_p = PERSONAL_PRONOUN[gender]
@@ -178,6 +190,43 @@ class Investigator:
     def __repr__(self):
         ret = f"{self.firstname} {self.surname} is a {self.age} year old {self.gender.person()} born in {self.birthplace} and living in {self.residence}. At the moment {self.gender.personal()} is a {self.occupation}"
         return ret
+
+    def occupation_impact(self):
+        pass
+
+    def set_damage_bonus_and_build(self) -> None:
+        """
+        Set damage bonus and build
+        """
+        strandsiz = self.strength + self.size
+
+        if strandsiz < 65:
+            t = ["-2", -2]
+        elif strandsiz < 85:
+            t = ["-1", -1]
+        elif strandsiz < 125:
+            t = ["0", -0]
+        elif strandsiz < 165:
+            t = ["D4", -1]
+        elif strandsiz < 205:
+            t = ["D6", -1]
+        else:
+            raise ValueError(f"SIZ + STR  ({strandsiz}) > 204")
+        self.damage_bonus, self. build = t
+
+    def set_movement(self) -> None:
+        """
+        Set movement
+        """
+        if self.dexterity<self.size and self.strength < self.size:
+            self.movement = 7
+        elif self.dexterity > self.size and self.strength > self.size:
+            self.movement = 9
+        else:
+            self.movement = 8
+
+        age_term = max(0, (self.age // 10) - 3)
+        self.movement += age_term
 
     def _get_char_value(self, code: str) -> int:
         return self.chars[code].regular
@@ -341,12 +390,12 @@ class Investigator:
         cumulative).
         """
         if self.age < 20:
-            logging.info("Age is below 20.")
-            logging.info("Deduct 5 points among STR and SIZ.")
+            LOGGER.info("Age is below 20.")
+            LOGGER.info("Deduct 5 points among STR and SIZ.")
             self.deduct(5, STR, SIZ)
-            logging.info("Deduct 5 points from EDU.")
+            LOGGER.info("Deduct 5 points from EDU.")
             self.education -= 5
-            logging.info("Roll twice to generate a Luck score and use the higher value")
+            LOGGER.info("Roll twice to generate a Luck score and use the higher value")
             self.chars[LUCK].set_if_higher(5 * Roll("3D6").roll())
         elif self.age < 40:
             self.chars[EDU].improvement_roll()
@@ -404,7 +453,8 @@ me = Investigator(firstname="Jessy",
                   occupation=None,
                   age=17)
 
-me.set_characteristic()
-print(me.gender.person())
 
-print(me)
+if __name__ == "__main__":
+    r = Roll("D6").roll()
+    LOGGER.debug(Roll.spread(-21, 4))
+    LOGGER.debug(Roll.spread(-21, 4))

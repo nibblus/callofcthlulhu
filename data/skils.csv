@@ -1,0 +1,88 @@
+Accounting;;5;;1
+Acting;;5;Art and Craft;2
+Animal Handling;U;5;;3
+Anthropology;;1;;4
+Appraise;;5;;5
+Archaeology;;1;;6
+Art and Crafts;;5;[Specializations];7
+Artillery;U;1;;8
+Astronomy;;1;Science;9
+Axe;;15;Fighting;10
+Biology;;1;Science;11
+Botany;;1;Science;12
+Bow;;15;Firearms;13
+Brawl;;25;Fighting;14
+Chainsaw;;10;Fighting;15
+Charm;;15;;16
+Chemistry;;1;Science;17
+Climb;;20;;18
+Computer Use;M;5;;19
+Credit Rating;;0;;20
+Cryptography;;1;Science;21
+Cthulhu Mythos;;0;;22
+Demolitions;U;1;;23
+Disguise;;5;;24
+Diving;U;1;;25
+Dodge;;half DEX;;26
+Drive Auto;;20;;27
+Electrical Repair;;10;;28
+Electronics;M;1;;29
+Engineering;;1;Science;30
+Fast Talk;;5;;31
+--Fighting (varies) [Specializations];;;;32
+Fine Art;;5;Art and Craft;33
+--Firearms (varies) [Specializations];;;;34
+First Aid;;30;;35
+Flail;;10;Fighting;36
+Flamethrower;;10;Firearms;37
+Forensics;;5;Science;38
+Forgery;;1;Art and Craft;39
+Garrote;;15;Fighting;40
+Geology;;1;Science;41
+Handgun;;20;Firearms;42
+Heavy Weapons;;10;Firearms;43
+History;;5;;44
+Hypnosis;U;1;;45
+Intimidate;;15;;46
+Jump;;20;;47
+Language (Other);S;1;;48
+Language (Own);;EDU;;49
+Law;;5;;50
+Library Use;;20;;51
+Listen;;20;;52
+Locksmith;;1;;53
+Lore;US;1;;54
+Machine Gun;;10;Firearms;55
+Mathematics;;10;Science;56
+Mechanical Repair;;10;;57
+Medicine;;1;;58
+Meteorology;;1;Science;59
+Natural World;;10;;60
+Navigate;;10;;61
+Occult;;5;;62
+Operate Heavy Machinery;;1;;63
+Persuade;;10;;64
+Pharmacy;;1;Science;65
+Photography;;5;Art and Craft;66
+Physics;;1;Science;67
+Pilot;S;1;;68
+Psychoanalysis;;1;;69
+Psychology;;10;;70
+Read Lips;U;1;;71
+Ride;;5;;72
+Rifle;;25;Firearms;73
+Science;S;1;;74
+Shotgun;;25;Firearms (Rifle/Shotgun);75
+Sleight of Hand;;10;;76
+Spear;;20;Fighting (or Throw);77
+Spot Hidden;;25;;78
+Stealth;;20;;79
+Submachine Gun;;15;Firearms;80
+Survival;S;10;;81
+Sword;;20;Fighting;82
+Swim;;20;;83
+Throw;;20;;84
+Track;;10;;85
+Whip;;5;Fighting;86
+Zoology;;1;Science;87
+Zoology;;1;Science;87

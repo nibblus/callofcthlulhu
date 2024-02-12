@@ -15,17 +15,19 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-import logging
+
 import math
 import random
 import re
+
+from coc.lib.logger import LOGGER
 
 
 def random_func(limit: int) -> int:
     """
     Generate a random integer between 1 and limit.
     This function is the heart of the die rolls.
-    If you don't trust its randomness, then feel free to repalce it.
+    If you don't trust its randomness, then feel free to replace it.
     :param limit: upper bound
     :return: random number between 1 and limit
     """
@@ -63,6 +65,7 @@ class Roll:
     """
 
     def __init__(self, description: str = "D100"):
+        LOGGER.debug(description)
         self.description = description
         self.dice = []
         description = description.replace("-", "|-").replace("+", "|")
@@ -70,6 +73,8 @@ class Roll:
         terms = [term.split("D") for term in terms]
         for term in terms:
             if len(term) == 1:
+                if term[0] == '':
+                    continue
                 self.dice.append(Value(int(term[0])))
             elif len(term) == 2:
                 l = 1 if len(term[0]) == 0 else int(term[0])
@@ -85,11 +90,11 @@ class Roll:
         for die in self.dice:
             r = die.value()
             total += r
-            logging.debug(f"Rolling {die} => value {r}  (subtotal: {total})")
+            LOGGER.debug(f"Rolling {die} => value {r}  (subtotal: {total})")
         return total
 
     @staticmethod
-    def spread(value: int, size:int) -> list:
+    def spread(value: int, size: int) -> list:
         """
         Spread a value among and number of variables.
         Spread(10,3) will generate a random list of numbers of length 3, where the sum of all numbers is 10, e.g. [1,7,2]
@@ -97,20 +102,26 @@ class Roll:
         :param size: the number of values to spread the value among.
         :return: list of variables
         """
+        LOGGER.debug(f"Spreading {value} over {size} buckets")
         ret = [0] * size
+        term = 1
+        if value < 0:
+            value = - value
+            term = -1
+
         for _ in range(value):
             index = random.randint(0, size - 1)
-            ret[index] += 1
+            ret[index] += term
         return ret
 
 
-D3 = Roll("D3")
-D4 = Roll("D4")
-D5 = Roll("D5")
-D6 = Roll("D6")
-D8 = Roll("D8")
-D10 = Roll("D10")
-D100= Roll("D100")
+# D3 = Roll("D3")
+# D4 = Roll("D4")
+# D5 = Roll("D5")
+# D6 = Roll("D6")
+# D8 = Roll("D8")
+# D10 = Roll("D10")
+# D100 = Roll("D100")
 
 
 class Value:
@@ -120,6 +131,9 @@ class Value:
 
     def __init__(self, value: int = 1):
         self._value = value
+
+    def __repr__(self):
+        return f"Value({self._value})"
 
     def value(self) -> int:
         """
@@ -131,7 +145,7 @@ class Value:
 
 def test_random():
     COUNT = 10000000
-    SEQUENCE_MAX = min(max(2, int(math.log10(COUNT)-2)),6)
+    SEQUENCE_MAX = min(max(2, int(math.log10(COUNT) - 2)), 6)
     seq = ""
     die = Roll('D6')
     d = dict()
@@ -154,17 +168,15 @@ def test_random():
         if len(seq) > SEQUENCE_MAX:
             seq = seq[1:]
         count = s.get(seq, 0)
-        count+=1
+        count += 1
         s[seq] = count
 
-
     for x in sorted(d.keys()):
-        print(f"{x} : {d[x]} => {d[x]*100/COUNT:.2f}%")
+        print(f"{x} : {d[x]} => {d[x] * 100 / COUNT:.2f}%")
 
     for x in sorted(s.keys()):
-        print(f"{x} : {s[x]} => {s[x]*100/COUNT:.2f}%")
-
+        print(f"{x} : {s[x]} => {s[x] * 100 / COUNT:.2f}%")
 
 
 if __name__ == "__main__":
-    print(Roll.spread(15,4))
+    r = Roll("-1").roll()
