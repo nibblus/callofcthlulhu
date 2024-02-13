@@ -18,7 +18,7 @@
 from typing import Optional
 
 from coc.core.gender import Gender
-from coc.core.roll import Roll, random_func, D6, D100, D10
+from coc.core.roll import Roll, random_func, D100, D10
 from coc.lib.logger import LOGGER
 
 
@@ -90,7 +90,7 @@ class Attribute:
         """
         return self._compare(value, self._half)
 
-    def is_extreme(self, value: Optional[int]):
+    def is_extreme(self, value: Optional[int]) -> bool:
         """
         Perform an extreme hard check
         :param value: Value to check, if no value is provided a random(100) will be generated
@@ -98,27 +98,32 @@ class Attribute:
         """
         return self._compare(value, self._fifth)
 
-    def deduct(self, value: int):
+    def deduct(self, value: int) -> None:
         """
-
-        :param value:
-        :return:
+        Subtract a value from this attribute
+        :param value: value to subtract
         """
         LOGGER.info(f"Deducting {value} from {self}")
         self.regular -= value
 
-    def set_if_higher(self, value):
+    def set_if_higher(self, value) -> None:
+        """
+        Set the attribute value to a new value, but only ifg the new value is higher
+        :param value: possible new value
+        """
         if value > self.regular:
             self.regular = value
 
-    def improvement_roll(self, count: int=1):
+    def improvement_roll(self, count: int = 1) -> None:
+        """
+        Perform one or more improvements roll on this attribute
+        :param count: Number of improvements rolls to perform
+        """
         for _ in range(count):
             v = D100.roll()
             if v > self.regular:
                 v = D10.roll()
                 self.regular += v
-
-
 
 
 STR = "STR"
@@ -140,7 +145,7 @@ class Characteristic(Attribute):
     def __init__(self, code, description, regular, maximum):
         Attribute.__init__(self, code, description, regular, maximum)
 
-    def improvement_roll(self):
+    def improvement_roll(self, count: int = 1):
         """
         Perform an improvement roll
         To make an EDU improvement check, simply roll percentage dice.
@@ -182,7 +187,6 @@ class Investigator:
         self.set_movement()
         self.occupation_impact()
 
-
         # self.possessive_p = gender.POSSESSIVE_PRONOUN[gender]
         # self.object_p = gender.OBJECT_PRONOUN[gender]
         # self.personal_p = PERSONAL_PRONOUN[gender]
@@ -191,34 +195,37 @@ class Investigator:
         ret = f"{self.firstname} {self.surname} is a {self.age} year old {self.gender.person()} born in {self.birthplace} and living in {self.residence}. At the moment {self.gender.personal()} is a {self.occupation}"
         return ret
 
-    def occupation_impact(self):
+    def occupation_impact(self) -> None:
+        """
+        Change the skills based on the occupation
+        """
         pass
 
     def set_damage_bonus_and_build(self) -> None:
         """
         Set damage bonus and build
         """
-        strandsiz = self.strength + self.size
+        strength_and_size = self.strength + self.size
 
-        if strandsiz < 65:
+        if strength_and_size < 65:
             t = ["-2", -2]
-        elif strandsiz < 85:
+        elif strength_and_size < 85:
             t = ["-1", -1]
-        elif strandsiz < 125:
+        elif strength_and_size < 125:
             t = ["0", -0]
-        elif strandsiz < 165:
+        elif strength_and_size < 165:
             t = ["D4", -1]
-        elif strandsiz < 205:
+        elif strength_and_size < 205:
             t = ["D6", -1]
         else:
-            raise ValueError(f"SIZ + STR  ({strandsiz}) > 204")
-        self.damage_bonus, self. build = t
+            raise ValueError(f"SIZ + STR  ({strength_and_size}) > 204")
+        self.damage_bonus, self.build = t
 
     def set_movement(self) -> None:
         """
         Set movement
         """
-        if self.dexterity<self.size and self.strength < self.size:
+        if self.dexterity < self.size and self.strength < self.size:
             self.movement = 7
         elif self.dexterity > self.size and self.strength > self.size:
             self.movement = 9
@@ -372,10 +379,16 @@ class Investigator:
 
     def education_improvement(self) -> None:
         """
+        Perform a EDU improvement
         """
         pass
 
-    def deduct(self, amount:int, *args):
+    def deduct(self, amount: int, *args) -> None:
+        """
+        Deduct the amount spread over the provided attributes
+        :param amount: amount to spread
+        :param args: attributes to deduct the amount from
+        """
         spread = Roll.spread(amount, len(args))
         for i in range(len(spread)):
             self.chars[args[i]].deduct(spread[i])
@@ -441,18 +454,13 @@ class Investigator:
             self.appearance -= 25
 
 
-    def set_characteristic(self):
-        self.age_impact()
-
-
 me = Investigator(firstname="Jessy",
                   surname="Williams",
                   gender=Gender.FEMALE,
                   birthplace="Boston",
                   residence="Arkham",
-                  occupation=None,
+                  occupation="Writer",
                   age=17)
-
 
 if __name__ == "__main__":
     r = Roll("D6").roll()

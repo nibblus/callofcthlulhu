@@ -1,7 +1,7 @@
 """
-    This file is part of tolyn.
+    This file is part of callofcthulhu.
 
-    tolyn is free software: you can redistribute it and/or modify
+    callofcthulhu is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -15,11 +15,11 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-import logging
-
+from enum import unique, Enum
 
 AGE_MIN = 15
 AGE_MAX = 90
+
 
 @unique
 class Era(Enum):
@@ -29,6 +29,7 @@ class Era(Enum):
     NineteenTwenty = 1
     Modern = 2
     Pulp = 3
+
 
 if __name__ == "__name__":
     raise NotImplementedError()

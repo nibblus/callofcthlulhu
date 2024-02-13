@@ -17,4 +17,4 @@
 """
 
 if __name__ == "__name__":
-    raise NotImplementedError()
+    raise NotImplementedError(__file__)

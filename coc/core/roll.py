@@ -16,7 +16,6 @@
 
 """
 
-import math
 import random
 import re
 
@@ -31,8 +30,8 @@ def random_func(limit: int) -> int:
     :param limit: upper bound
     :return: random number between 1 and limit
     """
-    if not isinstance(limit, int) or limit < 2:
-        raise TypeError(f"parameter limit must be integer greater than 1:  {limit}")
+    if not isinstance(limit, int) or limit < 1:
+        raise TypeError(f"parameter limit must be integer greater than 0:  {limit}")
     return random.randint(1, limit)
 
 
@@ -77,8 +76,8 @@ class Roll:
                     continue
                 self.dice.append(Value(int(term[0])))
             elif len(term) == 2:
-                l = 1 if len(term[0]) == 0 else int(term[0])
-                for i in range(l):
+                length = 1 if len(term[0]) == 0 else int(term[0])
+                for i in range(length):
                     self.dice.append(Die(int(term[1])))
 
     def roll(self) -> int:
@@ -103,6 +102,8 @@ class Roll:
         :return: list of variables
         """
         LOGGER.debug(f"Spreading {value} over {size} buckets")
+        if not isinstance(size, int) or size < 1:
+            raise TypeError(f"parameter limit must be integer greater than 0:  {size}")
         ret = [0] * size
         term = 1
         if value < 0:
@@ -113,15 +114,6 @@ class Roll:
             index = random.randint(0, size - 1)
             ret[index] += term
         return ret
-
-
-# D3 = Roll("D3")
-# D4 = Roll("D4")
-# D5 = Roll("D5")
-# D6 = Roll("D6")
-# D8 = Roll("D8")
-# D10 = Roll("D10")
-# D100 = Roll("D100")
 
 
 class Value:
@@ -143,40 +135,13 @@ class Value:
         return self._value
 
 
-def test_random():
-    COUNT = 10000000
-    SEQUENCE_MAX = min(max(2, int(math.log10(COUNT) - 2)), 6)
-    seq = ""
-    die = Roll('D6')
-    d = dict()
-    s = dict()
-    for _ in range(COUNT):
-        roll = die.roll()
-        """
-        tel frequentie van waarde
-        """
-        count = d.get(roll, 0)
-        count += 1
-        d[roll] = count
-
-        """
-        tel frequentie van sequenties 
-        """
-        seq = f"{seq}{roll}"
-        if len(seq) < SEQUENCE_MAX:
-            continue
-        if len(seq) > SEQUENCE_MAX:
-            seq = seq[1:]
-        count = s.get(seq, 0)
-        count += 1
-        s[seq] = count
-
-    for x in sorted(d.keys()):
-        print(f"{x} : {d[x]} => {d[x] * 100 / COUNT:.2f}%")
-
-    for x in sorted(s.keys()):
-        print(f"{x} : {s[x]} => {s[x] * 100 / COUNT:.2f}%")
-
+D3 = Roll("D3")
+D4 = Roll("D4")
+D5 = Roll("D5")
+D6 = Roll("D6")
+D8 = Roll("D8")
+D10 = Roll("D10")
+D100 = Roll("D100")
 
 if __name__ == "__main__":
-    r = Roll("-1").roll()
+    raise NotImplementedError(__file__)
