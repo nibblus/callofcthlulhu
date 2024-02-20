@@ -28,6 +28,27 @@ class Gender(Enum):
     FEMALE = 2
     X = 3
 
+    @staticmethod
+    def short_code(gender) -> str:
+        """
+        Generate code for gender: M, F, X
+        :param gender: input gender
+        :return:
+        :type gender: Gender
+        """
+        if gender == Gender.MALE:
+            return 'M'
+        if gender == Gender.FEMALE:
+            return 'F'
+        if gender == Gender.X:
+            return 'X'
+        raise ValueError(f"{gender} can not be translated to M, F, X")
+
+
+
+
+
+
     def person(self):
         """
 
